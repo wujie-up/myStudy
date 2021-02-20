@@ -1099,6 +1099,7 @@ public class AccessWithInnerClassExample {
 
 抽象类和普通类最大的区别是，抽象类不能被实例化，只能被继承。
 
+继承类只能访问抽象类protected访问级别及以上的成员变量和方法
 ```java
 public abstract class AbstractClassExample {
 
@@ -1117,6 +1118,7 @@ public abstract class AbstractClassExample {
 public class AbstractExtendClassExample extends AbstractClassExample {
     @Override
     public void func1() {
+        // int m  = y; // 'y' has private access in 'com.study.java.basic.AbstractExample'
         System.out.println("func1");
     }
 }
@@ -1140,7 +1142,11 @@ ac2.func1();
 
 ```java
 public interface InterfaceExample {
-
+   
+    static void staticMethod() { // 静态方法必须要有方法体
+        System.out.println("staticMethod");
+    }
+    
     void func1();
 
     default void func2(){
@@ -1160,6 +1166,7 @@ public interface InterfaceExample {
 public class InterfaceImplementExample implements InterfaceExample {
     @Override
     public void func1() {
+        // 不能直接调用 staticMethod
         System.out.println("func1");
     }
 }
@@ -1175,6 +1182,7 @@ System.out.println(InterfaceExample.x);
 **3. 比较**  
 
 - 从设计层面上看，抽象类提供了一种 IS-A 关系，需要满足里式替换原则，即子类对象必须能够替换掉所有父类对象。而接口更像是一种 LIKE-A 关系，它只是提供一种方法实现契约，并不要求接口和实现接口的类具有 IS-A 关系。
+- 接口可以看作行为（功能）的抽象。不同的实现类有具体的行为。例如：动物都有吃的行为，但猫吃鱼、狗吃骨头。
 - 从使用上来看，一个类可以实现多个接口，但是不能继承多个抽象类。
 - 接口的字段只能是 static 和 final 类型的，而抽象类的字段没有这种限制。
 - 接口的成员只能是 public 的，而抽象类的成员可以有多种访问权限。
