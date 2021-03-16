@@ -14,7 +14,8 @@ public class PrintIntBinary {
 //        print(a | b);
 //        print(a & b);
 //        print(a ^ b);
-        print(3);
+        print(1<<5);
+
 
         // 11111111111111111111111111110101
         // 10000000000000000000000000001011
