@@ -1,10 +1,8 @@
 ## 1、使用指令
 
-**netstat -natp**  显示网络连接
+**netstat -natp**  显示网络连接信息
 
 **lsof -p 进程号** 查看 进程开启文件描述符信息
-
-**netstat -natp**  观察网络连接信息
 
 **tcpdump -nn -i ens33 port 9090**  监听9090 端口 tcp的通信信息
 
@@ -162,21 +160,17 @@ java    11360 root    6u  IPv6             164335       0t0      TCP *:websm (LI
 nc -n 192.168.146.128 9090
 ```
 
-6、抓包捕捉到3次握手信息
-
-![](G:\myStudy\img\io\io10.png)
-
-7、再查看 网络连接信息
+6、再查看 网络连接信息
 
 ​	可以看出虽然服务端没有调用 accept() 方法，客户端依然可以建立连接，但是**没有分配 进程，存在于内核中。**
 
 ![image-20210318220351119](G:\myStudy\img\io\io11.png)
 
-8、继续再客户端发送数据
+7、继续再客户端发送数据
 
 ![image-20210318220909414](G:\myStudy\img\io\io13.png)
 
-9、查看 转包信息 和 网络连接信息
+8、查看 转包信息 和 网络连接信息
 
 服务端收到信息并且进行ack
 
@@ -186,7 +180,7 @@ nc -n 192.168.146.128 9090
 
 ![image-20210318221207432](G:\myStudy\img\io\io15.png)
 
-10、服务端输入空格，接收到client发送到内核中的数据
+9、服务端输入空格，接收到client发送到内核中的数据
 
 ![](G:\myStudy\img\io\io16.png)
 
@@ -205,6 +199,8 @@ nc -n 192.168.146.128 9090
 ![image-20210318223150816](G:\myStudy\img\io\io18.png)
 
 ![image-20210318234243439](G:\myStudy\img\io\io18-1.png)
+
+
 
 ## 5、tcp参数测试
 
@@ -308,3 +304,96 @@ dgsgdsgdsgdsgdsgdsg
 4、开启延迟发送后
 
 ![](G:\myStudy\img\io\io25.png)
+
+
+
+## 6、三次握手与四次挥手
+
+开启服务socket连接，开启网络抓包、显示网络连接信息
+
+```java
+tcpdump -nn -i ens33 port 9090  // 监听9090 端口 tcp的通信信息
+netstat -natp  // 显示网络连接信息
+```
+
+### 1、抓包捕捉到3次握手信息
+
+```java
+[root@localhost ~]# tcpdump -nn -i ens33 port 9090
+tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on ens33, link-type EN10MB (Ethernet), capture size 262144 bytes
+22:11:40.740274 IP 192.168.146.129.48002 > 192.168.146.128.9090: Flags [S], seq 3111891726, win 29200, options [mss 1460,sackOK,TS val 21783120 ecr 0,nop,wscale 7], length 0
+22:11:40.740317 IP 192.168.146.128.9090 > 192.168.146.129.48002: Flags [S.], seq 2030577775, ack 3111891727, win 28960, options [mss 1460,sackOK,TS val 22730061 ecr 21783120,nop,wscale 7], length 0
+22:11:40.740511 IP 192.168.146.129.48002 > 192.168.146.128.9090: Flags [.], ack 1, win 229, options [nop,nop,TS val 21783120 ecr 22730061], length 0
+```
+
+
+
+![image-20210324221217587](G:\myStudy\img\io\io10.png)
+
+#### **服务端网络连接状态**
+
+![image-20210324221655695](G:\myStudy\img\io\io40.png)
+
+**客户端网络状态**
+
+![image-20210324222952392](G:\myStudy\img\io\io42.png)
+
+
+
+### 2、不完整挥手、与完整的4次回收
+
+#### 2.1 服务端收到客户端关闭后，不进行处理
+
+```java
+// client.close();  // 服务端不进行关闭操作
+```
+
+**服务端网络状态**
+
+![image-20210324221817334](G:\myStudy\img\io\io41.png)
+
+### 客户端网络状态
+
+![image-20210324223023712](G:\myStudy\img\io\io43.png)
+
+服务端socket连接进入 **CLOSE_WAIT** 状态
+
+客户端socket连接进入 **FIN_WAIT2** 状态
+
+```java
+// 抓包信息
+22:17:44.096837 IP 192.168.146.129.48002 > 192.168.146.128.9090: Flags [F.], seq 1, ack 1, win 229, options [nop,nop,TS val 22146437 ecr 22730061], length 0
+22:17:44.097294 IP 192.168.146.128.9090 > 192.168.146.129.48002: Flags [.], ack 2, win 227, options [nop,nop,TS val 23093418 ecr 22146437], length 0
+```
+
+
+
+#### 2.2 服务端再收到客户端关闭后，进行处理
+
+![image-20210324223716405](G:\myStudy\img\io\io46.png)
+
+````java
+client.close();  // 服务端关闭操作
+````
+
+**服务端网络状态**
+
+![](G:\myStudy\img\io\io44.png)
+
+**客户端网络状态**
+
+![image-20210324223456333](G:\myStudy\img\io\io45.png)
+
+服务端socket连接已经关闭了 **CLOSED**
+
+客户端socket连接进入 **TIME_WAIT** 状态
+
+```java
+22:33:39.915770 IP 192.168.146.129.48006 > 192.168.146.128.9090: Flags [F.], seq 1, ack 1, win 229, options [nop,nop,TS val 23102255 ecr 24036640], length 0
+22:33:39.917135 IP 192.168.146.128.9090 > 192.168.146.129.48006: Flags [.], ack 2, win 227, options [nop,nop,TS val 24049237 ecr 23102255], length 0
+22:33:39.921152 IP 192.168.146.128.9090 > 192.168.146.129.48006: Flags [F.], seq 1, ack 2, win 227, options [nop,nop,TS val 24049241 ecr 23102255], length 0
+22:33:39.921652 IP 192.168.146.129.48006 > 192.168.146.128.9090: Flags [.], ack 2, win 229, options [nop,nop,TS val 23102262 ecr 24049241], length 0
+```
+
+![image-20210325202738727](G:\myStudy\img\io\io47.png)
