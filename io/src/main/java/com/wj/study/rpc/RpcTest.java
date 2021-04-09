@@ -8,11 +8,18 @@ import com.wj.study.rpc.service.UserService;
 import com.wj.study.rpc.service.entity.User;
 import com.wj.study.rpc.service.impl.UserServiceFailImpl;
 import com.wj.study.rpc.service.impl.UserServiceImpl;
+import com.wj.study.rpc.transport.Header;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
 
+@Slf4j
 public class RpcTest {
+
+    AtomicInteger count = new AtomicInteger(0);
+
     @Test
     public void initServer() throws IOException {
         RemoteServiceRegistry.registry(UserService.class.getName(), new UserServiceImpl());
@@ -24,9 +31,20 @@ public class RpcTest {
     @Test
     public void cliInvoke() {
         LocalServiceRegistry.registry(UserService.class.getName(), new UserServiceFailImpl());
+        for (int i = 0; i < 20; i++) {
+            new Thread(
+                    () -> {
+                        UserService userService = InvokeProxy.proxy(UserService.class);
+                        User user = userService.get(22);
+                        log.info("第{}次完成调用，结果:{}", count.incrementAndGet(), user.getName());
+                    }
+            ).start();
+        }
 
-        UserService userService = InvokeProxy.proxy(UserService.class);
-        User user = userService.get(22);
-        System.out.println(user);
+        try {
+            System.in.read();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

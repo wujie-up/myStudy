@@ -2,8 +2,8 @@ package com.wj.study.rpc.proxy;
 
 import com.wj.study.rpc.RpcException.RpcException;
 import com.wj.study.rpc.annotation.Rpc;
-import com.wj.study.rpc.protocol.Protocol;
-import com.wj.study.rpc.protocol.netty.NettyProtocol;
+import com.wj.study.rpc.facory.InvokeFactory;
+import com.wj.study.rpc.invoke.Invoker;
 import com.wj.study.rpc.registry.LocalServiceRegistry;
 import lombok.extern.slf4j.Slf4j;
 
@@ -13,7 +13,6 @@ import java.lang.reflect.Proxy;
 
 @Slf4j
 public class InvokeProxy {
-
     public static <T> T proxy(Class<T> interfaceClazz) {
         Class<?>[] interfaces = {interfaceClazz};
 
@@ -41,30 +40,8 @@ public class InvokeProxy {
     }
 
     private static <T> Object remoteInvoke(Class<T> clazz, Method method, Object[] args) throws Exception {
-        Object res = null;
-        // 1、确定使用的协议
-        Protocol protocol = getProtocol(method, clazz);
-
-        return protocol.invoke(clazz, method, args);
-    }
-
-    private static <T> Protocol getProtocol(Method method, Class<T> clazz) {
-        Protocol protocol = null;
-        Rpc anno = method.getAnnotation(Rpc.class);
-        if (null == anno) {
-            anno = clazz.getAnnotation(Rpc.class);
-        } else {
-            throw new RuntimeException();
-        }
-
-        String pt = anno.protocol();
-        if (pt.equals("netty")) {
-            protocol = new NettyProtocol();
-        } else if ("http".equals(pt)) {
-            // todo
-            // protocol = new HttpProtocol();
-        }
-        return protocol;
+        Invoker invoker = InvokeFactory.createInvoke(clazz, method, args);
+        return invoker.invoke();
     }
 
     private static <T> Object localInvoke(Class<T> clazz, Method method, Object[] args) {

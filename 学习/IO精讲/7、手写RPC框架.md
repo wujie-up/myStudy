@@ -2,7 +2,7 @@
 
 ## 1、框架模型
 
-
+![](G:\myStudy\img\io\io50.png)
 
 ## 2、开工
 
@@ -368,7 +368,7 @@ public class NettyClientFactory {
         }
         Random r = new Random();
         int i = r.nextInt(defaultPoolSize);
-        if (null == cliPool.channels[i]) {
+        if (null == cliPool.channels[i] || !cliPool.channels[i].isActive()) {
             synchronized (cliPool.lock[i]) {
                 if (null == cliPool.channels[i]) {
                     cliPool.channels[i] = createCli(uri);
