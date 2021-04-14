@@ -1,11 +1,14 @@
 package com.wj.study.rpc.protocol.netty.server;
 
+import com.wj.study.rpc.protocol.netty.handler.HttpServerHandler;
 import com.wj.study.rpc.protocol.netty.handler.NettyRpcDecoder;
 import com.wj.study.rpc.protocol.netty.handler.NettyServerHanlder;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.http.HttpObjectAggregator;
+import io.netty.handler.codec.http.HttpServerCodec;
 
 public class NettyServer {
 
@@ -30,8 +33,12 @@ public class NettyServer {
                     @Override
                     protected void initChannel(Channel ch) throws Exception {
                         ChannelPipeline p = ch.pipeline();
-                        p.addLast(new NettyRpcDecoder());
-                        p.addLast(new NettyServerHanlder());
+//                        p.addLast(new NettyRpcDecoder());
+//                        p.addLast(new NettyServerHanlder());
+                        // 使用http协议
+                        p.addLast(new HttpServerCodec());
+                        p.addLast(new HttpObjectAggregator(65535));
+                        p.addLast(new HttpServerHandler());
                     }
                 });
 

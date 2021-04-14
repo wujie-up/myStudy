@@ -1,12 +1,15 @@
 package com.wj.study.rpc.protocol.netty.client;
 
 import com.wj.study.rpc.protocol.Uri;
+import com.wj.study.rpc.protocol.netty.handler.HttpCliHandler;
 import com.wj.study.rpc.protocol.netty.handler.NettyRpcDecoder;
 import com.wj.study.rpc.protocol.netty.handler.NettyCliHandler;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.http.HttpClientCodec;
+import io.netty.handler.codec.http.HttpObjectAggregator;
 
 public class NettyClient {
     private Channel channel;
@@ -35,8 +38,11 @@ public class NettyClient {
                     @Override
                     protected void initChannel(NioSocketChannel channel) throws Exception {
                         ChannelPipeline p = channel.pipeline();
-                        p.addLast(new NettyRpcDecoder());
-                        p.addLast(new NettyCliHandler());
+//                        p.addLast(new NettyRpcDecoder());
+//                        p.addLast(new NettyCliHandler());
+                        p.addLast(new HttpClientCodec());
+                        p.addLast(new HttpObjectAggregator(65535));
+                        p.addLast(new HttpCliHandler());
                     }
                 });
     }

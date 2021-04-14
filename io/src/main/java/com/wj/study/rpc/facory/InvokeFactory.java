@@ -4,6 +4,7 @@ import com.wj.study.rpc.annotation.Rpc;
 import com.wj.study.rpc.invoke.Invoker;
 import com.wj.study.rpc.protocol.Protocol;
 import com.wj.study.rpc.protocol.Uri;
+import com.wj.study.rpc.protocol.http.HttpProtocol;
 import com.wj.study.rpc.protocol.netty.NettyProtocol;
 import com.wj.study.rpc.registrycenter.RegistryCenter;
 import com.wj.study.rpc.transport.Content;
@@ -20,7 +21,7 @@ public class InvokeFactory {
     static {
         // 在这里初始化所有的协议
         protocolMap.put("netty", new NettyProtocol());
-        // todo protocolMap.put("http", new HttpProtocol());
+        protocolMap.put("http", new HttpProtocol());
     }
 
     public static Invoker createInvoke(Class clazz, Method method, Object[] args) {
@@ -86,7 +87,6 @@ public class InvokeFactory {
 
 
     private static <T> Protocol getProtocol(Method method, Class<T> clazz) {
-        Protocol protocol = null;
         Rpc anno = method.getAnnotation(Rpc.class);
         if (null == anno) {
             anno = clazz.getAnnotation(Rpc.class);

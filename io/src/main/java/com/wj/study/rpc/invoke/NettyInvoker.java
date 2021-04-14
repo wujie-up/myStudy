@@ -10,6 +10,9 @@ import com.wj.study.rpc.transport.resp.Response;
 import com.wj.study.rpc.util.SerializeUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.handler.codec.http.DefaultFullHttpRequest;
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpVersion;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -25,6 +28,34 @@ public class NettyInvoker implements Invoker{
 
     @Override
     public Object invoke() throws Exception{
+
+//        CompletableFuture<Response> future = nettyInvoke();
+        CompletableFuture<Response> future = httpInvoke();
+
+        Response response = future.get();
+        Object res = response.getObj();
+        if (res instanceof RpcException) {
+            RpcException rpcEx = (RpcException) res;
+            throw rpcEx;
+        }
+        return res;
+    }
+
+    private CompletableFuture<Response> httpInvoke() {
+        CompletableFuture<Response> future = new CompletableFuture<>();
+        ResponseMappingCallBack.addCallBack(request.getRequestId(), future);
+
+        byte[] resBytes = SerializeUtil.obj2Bytes(request);
+        ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.directBuffer(resBytes.length);
+        byteBuf.writeBytes(resBytes);
+        DefaultFullHttpRequest request =
+                new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, "/", byteBuf);
+        request.headers().add("content-length", resBytes.length);
+        client.send(request);
+        return future;
+    }
+
+    private CompletableFuture<Response> nettyInvoke() {
         String requestId = request.getRequestId();
         CompletableFuture<Response> future = new CompletableFuture<>();
         ResponseMappingCallBack.addCallBack(requestId, future);
@@ -40,13 +71,6 @@ public class NettyInvoker implements Invoker{
         byteBuf.writeBytes(data);
 
         client.send(byteBuf);
-
-        Response response = future.get();
-        Object res = response.getObj();
-        if (res instanceof RpcException) {
-            RpcException rpcEx = (RpcException) res;
-            throw rpcEx;
-        }
-        return res;
+        return future;
     }
 }
