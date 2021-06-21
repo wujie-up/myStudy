@@ -222,44 +222,44 @@ public class OrderController {
 
 如果使用nacos作为注册中心，nacos-discovery依赖了ribbon，可以不用再引入ribbon依赖
 
-             ```xml
-             <dependency>
-                 <groupId>org.springframework.cloud</groupId>
-                 <artifactId>spring-cloud-starter-netflix-ribbon</artifactId>
-             </dependency>
-             ```
+```xml
+<dependency>
+	<groupId>org.springframework.cloud</groupId>
+	<artifactId>spring-cloud-starter-netflix-ribbon</artifactId>
+</dependency>
+```
 
 **2) 添加@LoadBalanced注解**
 
-       ```java
-       @Configuration
-       public class RestConfig {
-           @Bean
-           @LoadBalanced
-           public RestTemplate restTemplate() {
-               return new RestTemplate();
-       } 
-       ```
+```java
+@Configuration
+public class RestConfig {
+     @Bean
+     @LoadBalanced
+     public RestTemplate restTemplate() {
+         return new RestTemplate();
+} 
+```
 
 **3) 客户端调用代码**
 
-                ```java
-                @Autowired
-                private RestTemplate restTemplate;
-                
-                @RequestMapping(value = "/findOrderByUserId/{id}")
-                public R  findOrderByUserId(@PathVariable("id") Integer id) {
-                    // RestTemplate调用
-                    //String url = "http://localhost:8020/order/findOrderByUserId/"+id;
-                    //模拟ribbon实现
-                    //String url = getUri("mall-order")+"/order/findOrderByUserId/"+id;
-                    // 添加@LoadBalanced
-                    String url = "http://mall-order/order/findOrderByUserId/"+id;
-                    R result = restTemplate.getForObject(url,R.class);
-                
-                    return result;
-                }  
-                ```
+```java
+@Autowired
+private RestTemplate restTemplate;
+
+@RequestMapping(value = "/findOrderByUserId/{id}")
+public R  findOrderByUserId(@PathVariable("id") Integer id) {
+    // RestTemplate调用
+    //String url = "http://localhost:8020/order/findOrderByUserId/"+id;
+    //模拟ribbon实现
+    //String url = getUri("mall-order")+"/order/findOrderByUserId/"+id;
+    // 添加@LoadBalanced
+    String url = "http://mall-order/order/findOrderByUserId/"+id;
+    R result = restTemplate.getForObject(url,R.class);
+
+    return result;
+}  
+```
 
 
 
@@ -507,12 +507,12 @@ mall-order:
 
 **2）全局配置**
 
-             ```java
-             @Bean
-             public IRule ribbonRule() {
-                 return new NacosRandomWithWeightRule();
-             }
-             ```
+```java
+@Bean
+public IRule ribbonRule() {
+	return new NacosRandomWithWeightRule();
+}
+```
 
 **3）局部配置第二种方式**
 
@@ -786,3 +786,10 @@ spring:
     name: consumer
 ```
 
+
+
+## 8、Ribbon源码分析
+
+https://www.processon.com/diagraming/60ada5947d9c0821843239da
+
+![Ribbon](G:\myStudy\img\microService\springcloudalibaba\ribbon\Ribbon.jpg)
