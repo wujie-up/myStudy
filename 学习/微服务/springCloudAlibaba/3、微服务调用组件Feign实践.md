@@ -197,11 +197,11 @@ public class FeignConfig {
 - **HEADERS**：记录BASIC级别的基础上，记录请求和响应的header。
 - **FULL**【比较适用于开发及测试环境定位问题】：记录请求和响应的header、body和元数据。
 
-#### 2）局部配置，让调用的微服务生效，在@FeignClient 注解中指定使用的配置类
+2）局部配置，让调用的微服务生效，在@FeignClient 注解中指定使用的配置类
 
 ​    <img src="G:\myStudy\img\microService\feign\2.png" alt="0" style="zoom: 67%;" /> 
 
-#### 3) 在yml配置文件中执行 Client 的日志级别才能正常输出日志，格式是"logging.level.feign接口包路径=debug"
+3) 在yml配置文件中执行 Client 的日志级别才能正常输出日志，格式是"logging.level.feign接口包路径=debug"
 
 ```yaml
 logging:
@@ -257,7 +257,7 @@ public interface OrderFeignService {
 }
 ```
 
-##### 3）补充，也可以通过yml配置契约
+#### 3）补充，也可以通过yml配置契约
 
 ```yaml
 feign:
@@ -274,7 +274,7 @@ feign:
 
 通常我们调用的接口都是有权限控制的，很多时候可能认证的值是通过参数去传递的，还有就是通过请求头去传递认证信息，比如 Basic 认证方式、接口鉴权
 
-#### Feign 中我们可以直接配置 Basic 认证
+#### 直接配置 Basic 认证
 
 ```java
 @Configuration  // 全局配置
@@ -304,7 +304,7 @@ public interface RequestInterceptor {
 }
 ```
 
-**自定义拦截器实现认证逻辑**
+#### 自定义拦截器实现认证逻辑
 
 ```java
 public class FeignAuthRequestInterceptor implements RequestInterceptor {
@@ -543,8 +543,69 @@ feign:
 
 
 
+### 3.8、Feign的服务降级处理
+
+<font color=orange>注意：必须要配置以下参数，否则无法进行降级处理</font>
+
+```yaml
+feign:
+  hystrix:
+    enabled: true
+```
+
+#### 1、使用fallback指定处理降级的类
+
+```java
+@FeignClient(value = "mall-order",path = "/order", fallback = OrderFeignServiceImpl.class)
+public interface OrderFeignService {
+
+    @RequestMapping("/findOrderByUserId/{userId}")
+    R findOrderByUserId(@PathVariable("userId") Integer userId);
+}
+```
+
+```java
+@Component
+public class OrderFeignServiceImpl implements OrderFeignService{
+    @Override
+    public R findOrderByUserId(Integer userId) {
+        System.out.println("降级方法");
+        return null;
+    }
+}
+```
+
+#### 2、使用fallbackFactory指定处理降级的工厂
+
+```java
+@FeignClient(value = "mall-order",path = "/order", fallbackFactory = OrderFeignServiceFallBackFactory.class)
+public interface OrderFeignService {
+
+    @RequestMapping("/findOrderByUserId/{userId}")
+    R findOrderByUserId(@PathVariable("userId") Integer userId);
+}
+```
+
+```java
+@Component
+public class OrderFeignServiceFallBackFactory implements FallbackFactory<OrderFeignService> {
+    @Override
+    public OrderFeignService create(Throwable throwable) {
+        return new OrderFeignService() {
+            @Override
+            public R findOrderByUserId(Integer userId) {
+                System.out.println("降级方法");
+                return null;
+            }
+        };
+    }
+}
+```
+
+
+
 ## 4、Feign源码分析
 
 https://www.processon.com/diagraming/60b4987e7d9c08055f3533b6
 
-![Feign](G:\myStudy\img\microService\feign\Feign.png)
+<img src="G:\myStudy\img\microService\feign\Feign.png" alt="Feign" style="zoom:80%;" /> 
